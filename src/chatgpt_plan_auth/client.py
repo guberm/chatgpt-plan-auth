@@ -15,31 +15,13 @@ from typing import Any
 import httpx
 from openai import AsyncOpenAI
 
+from ._compat import create_auth_flow, create_auth_flow_class
 from .auth import ChatGPTAuth
 from .const import PLACEHOLDER_API_KEY
 
-
-class ChatGPTSubscriptionAuth(httpx.Auth):
-    """Attach the SIWC access token and refresh it once on a 401."""
-
-    def __init__(self, auth: ChatGPTAuth) -> None:
-        """Initialize the auth flow."""
-        self._auth = auth
-
-    async def async_auth_flow(
-        self, request: httpx.Request
-    ) -> AsyncGenerator[httpx.Request, httpx.Response]:
-        """Attach the access token, refreshing it when it was rejected."""
-        request.headers["Authorization"] = (
-            f"Bearer {await self._auth.async_get_access_token()}"
-        )
-        response = yield request
-        if response.status_code == 401:
-            await self._auth.async_handle_authentication_error()
-            request.headers["Authorization"] = (
-                f"Bearer {self._auth.credentials.access_token}"
-            )
-            yield request
+# The flow for a plain `httpx` client, for callers which build one directly.
+# `custom_auth` below picks the flavour of the client actually in use.
+ChatGPTSubscriptionAuth = create_auth_flow_class(httpx.Auth)
 
 
 class ChatGPTSubscriptionClient(AsyncOpenAI):
@@ -77,8 +59,8 @@ class ChatGPTSubscriptionClient(AsyncOpenAI):
 
     @property
     def custom_auth(self) -> httpx.Auth | None:
-        """Return the token refreshing auth flow."""
-        return ChatGPTSubscriptionAuth(self.auth)
+        """Return the token refreshing auth flow for the client in use."""
+        return create_auth_flow(self._client, self.auth)
 
 
 __all__ = ["ChatGPTSubscriptionAuth", "ChatGPTSubscriptionClient"]

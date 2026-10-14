@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import httpx
 
+from ._compat import HTTP_ERRORS
 from .auth import ChatGPTCredentials, ChatGPTAuth
 from .const import (
     HTTP_TIMEOUT,
@@ -54,7 +55,7 @@ async def _async_fetch_subscription_models(
             headers={"Authorization": f"Bearer {access_token}"},
             timeout=HTTP_TIMEOUT,
         )
-    except httpx.HTTPError as err:
+    except HTTP_ERRORS as err:
         raise ChatGPTPlanAuthError(f"Error talking to OpenAI: {err}") from err
 
     if response.status_code in (401, 403):
@@ -64,7 +65,7 @@ async def _async_fetch_subscription_models(
 
     try:
         response.raise_for_status()
-    except httpx.HTTPError as err:
+    except HTTP_ERRORS as err:
         raise ChatGPTPlanAuthError(f"Error listing OpenAI models: {err}") from err
 
     try:

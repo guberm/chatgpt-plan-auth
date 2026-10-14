@@ -46,6 +46,7 @@ from urllib.parse import parse_qsl, urlencode, urlparse
 
 import httpx
 
+from ._compat import HTTP_ERRORS
 from .const import (
     AGENT_NAME_HINT,
     AUTH_METHOD_CHATGPT,
@@ -285,7 +286,7 @@ async def async_token_request(
     """
     try:
         response = await client.post(TOKEN_URL, data=data, timeout=HTTP_TIMEOUT)
-    except httpx.HTTPError as err:
+    except HTTP_ERRORS as err:
         raise ChatGPTPlanAuthError(f"Error talking to OpenAI: {err}") from err
 
     if response.status_code == 200:
