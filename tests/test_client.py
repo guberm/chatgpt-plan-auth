@@ -67,3 +67,29 @@ async def test_subscription_client_request_carries_access_token() -> None:
     assert models.object == "list"
     # A placeholder API key must never reach the wire.
     assert seen["authorization"] == "Bearer access-1"
+
+
+async def test_subscription_client_bounds_retries() -> None:
+    """Test that a degraded provider edge is not retried for minutes.
+
+    The route answers a broken provider edge with a 5xx plus a `retry_after` of
+    a minute, which the SDK honors while backing off; the client bounds that so
+    an interactive request fails with the status instead of hanging.
+    """
+    http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json={}))
+    )
+    try:
+        client = ChatGPTSubscriptionClient(
+            ChatGPTAuth(credentials(), client=http_client), http_client=http_client
+        )
+        assert client.max_retries == 1
+
+        override = ChatGPTSubscriptionClient(
+            ChatGPTAuth(credentials(), client=http_client),
+            http_client=http_client,
+            max_retries=5,
+        )
+        assert override.max_retries == 5
+    finally:
+        await http_client.aclose()

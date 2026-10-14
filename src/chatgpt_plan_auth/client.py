@@ -58,6 +58,12 @@ class ChatGPTSubscriptionClient(AsyncOpenAI):
         # non-empty `api_key` to build a client, and it does not support a
         # callable one (that raises inside the request).
         options.pop("api_key", None)
+        # The plan usage route answers a degraded provider edge with a 5xx and a
+        # `retry_after` (60 seconds when this was written), which the SDK honors
+        # while backing off. The default of two retries therefore leaves an
+        # interactive request waiting minutes before the caller sees the error,
+        # so bound it to a single retry and let the caller report the status.
+        options.setdefault("max_retries", 1)
         super().__init__(api_key=PLACEHOLDER_API_KEY, http_client=http_client, **options)
 
     def with_options(self, **options: Any) -> ChatGPTSubscriptionClient:

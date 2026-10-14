@@ -1,0 +1,33 @@
+name: Publish to PyPI
+
+# Trusted publishing: no API token anywhere. One-time setup on PyPI:
+#   1. https://pypi.org/manage/account/publishing/ -> "Add a new pending publisher"
+#      PyPI Project Name: chatgpt-plan-auth
+#      Owner: guberm
+#      Repository name: chatgpt-plan-auth
+#      Workflow name: publish.yml
+#      Environment name: (leave empty)
+#   2. Push a tag:  git tag v1.0.0 && git push origin v1.0.0
+# After the first release the publisher is no longer "pending".
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required for trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build
+        run: uv build
+
+      - name: Publish
+        run: uv publish
