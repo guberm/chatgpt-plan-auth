@@ -43,7 +43,7 @@ from .const import (
 from .errors import ChatGPTPlanAuthError, ChatGPTPlanAuthFatalError
 from .requests import shape_request_for_subscription, subscription_error_message
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 __all__ = [
     "AUTH_METHOD_CHATGPT",

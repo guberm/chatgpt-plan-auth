@@ -1,6 +1,7 @@
 name: Publish to PyPI
 
-# Trusted publishing: no API token anywhere. One-time setup on PyPI:
+# Trusted publishing: no API token anywhere, and the publish action uploads
+# PEP 740 attestations so the provenance of a release can be verified from PyPI.
 #   1. https://pypi.org/manage/account/publishing/ -> "Add a new pending publisher"
 #      PyPI Project Name: chatgpt-plan-auth
 #      Owner: guberm
@@ -29,5 +30,8 @@ jobs:
       - name: Build
         run: uv build
 
-      - name: Publish
-        run: uv publish
+      - name: Publish to PyPI
+        # `pypa/gh-action-pypi-publish` uploads with trusted publishing and adds
+        # the PEP 740 attestation that Home Assistant's dependency check looks
+        # for. The workflow only runs on tag pushes, so no event data reaches it.
+        uses: pypa/gh-action-pypi-publish@release/v1
